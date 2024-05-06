@@ -1,0 +1,88 @@
+---
+title: "Exploring IMDB data"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# clear memory
+rm(list = ls())
+gc()
+
+# set seed for replication of randomized functions
+set.seed(12345)
+
+# set paths to data
+raw_data_path = "~/Dropbox/McGill/teaching/2023-2024/summer/ORGB690/data/imdb/"
+
+# load tidyverse
+library(tidyverse, quietly = TRUE )
+```
+
+## Introduction: Goals and Strategy
+
+In this exercise, I am going to explore the IMDB dataset. I need to...
+
+1.  Understand the data structure and scope
+
+2.  Identify any apparent encoding errors or points to correct
+
+3.  Propose the research questions to consider in the course and the scope of data required for that
+
+But before I proceed, I need to load the data. The data files were obtained from this page: <https://datasets.imdbws.com/> and the data dictionaries are available here: <https://developer.imdb.com/non-commercial-datasets/>
+
+### Loading raw data files
+
+```{r load-data}
+# Load the required packages
+library(readr) # for read_tsv() function
+library(arrow) # for write_feather() function
+
+##### read files individually and save in feather format
+# names of all actors
+name_basics <- read_tsv(paste0(raw_data_path, "name.basics.tsv"), na = "\\N",
+                        col_types = list(
+                          nconst = col_character(),
+                          primaryName = col_character(),
+                          birthYear = col_integer(),
+                          deathYear = col_integer(),
+                          primaryProfession = col_character(),
+                          knownForTitles = col_character()
+                        )) 
+
+write_feather(name_basics, paste0(raw_data_path,"people.feather"))
+
+# all titles
+title_basics <- read_tsv(paste0(raw_data_path, "title.basics.tsv"), na = "\\N", quote = "",
+                        col_types = list(
+                          tconst = col_character(),
+                          titleType = col_character(),
+                          primaryTitle = col_character(),
+                          originalTitle = col_character(),
+                          isAdult = col_integer(),
+                          startYear = col_integer(),
+                          endYear = col_integer(),
+                          runtimeMinutes = col_integer(),
+                          genres = col_character()
+                        )) 
+
+# get a subset of just movies
+movies <- title_basics |> 
+  filter(titleType=="movie")
+
+write_feather(name_basics, paste0(raw_data_path,"movies.feather"))
+
+## principals
+title_principals <- read_tsv(paste0(raw_data_path, "title.principals.tsv"), na = "\\N", quote = "", col_types = list(ordering = col_integer()))
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
