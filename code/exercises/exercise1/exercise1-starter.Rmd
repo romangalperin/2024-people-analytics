@@ -1,0 +1,99 @@
+---
+title: "Exercise 1 starter"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+gc()
+```
+
+## Introduction
+
+In this starter file, I will show some of the basics of handling raw data in R. There are several different approaches to loading, querying and transforming data in R. We'll be relying on what is sometimes called a "tidyverse" approach, because it is the easiest to grasp, in terms of what is happening with data and results at each step of the script. You can read about this approach (and see very intuitive illustrative examples) in the free textbook that was written by the authors of the `tidyverse` package: [R for Data Science](https://r4ds.hadley.nz/intro "textbook").
+
+## Loading data
+
+We'll use performance data for three workers that we have discussed in session 2 (week 1) to illustrate this most intuitive approach. The data are in a [comma-separated-values (CSV)](https://en.wikipedia.org/wiki/Comma-separated_values) file, which we will read using `read_csv()` function. To remind, we need to know a path to the file on our local drive to be able to load it. Here is how I do it on my laptop (make sure to update the value of `data_path` below to point to the folder where you have saved the file on your machine).
+
+```{r}
+# load tidyverse packages
+library(tidyverse, quietly = TRUE, warn.conflicts = FALSE)
+
+# define path to the file that we are loading - UPDATE this to use on your laptop
+data_path = "~/Dropbox/McGill/teaching/2023-2024/summer/ORGB690/data/"
+
+# load the file into a performance_data dataframe
+# NOTE: paste0() combines the path to file with the name of the file
+performance_data <- read_csv(paste0(data_path, "performance_data.csv"))
+```
+
+## Analyze the data
+
+The data for three workers is now loaded into the `performance_data` dataframe. You can click on it in the "Environment" tab in RStudio (top right) to see what the data looks like. Let's look at some basic statistics in these data. We'll do two things:
+
+1.  Get average performance value for each worker
+
+2.  Plot a distribution of day-to-day changes in performance for one of the workers.
+
+### Average performance for each worker
+
+First, let's get the averages.
+
+```{r}
+# calculate averages with a summarize() function
+averages <- performance_data |> 
+  # summarize the values of workerX columns into one average per column
+  summarise(
+    w1_average = mean(worker1),
+    w2_average = mean(worker2),
+    w3_average = mean(worker3)
+  )
+
+# to see what's inside the `averages` dataframe, we simply call it
+averages
+```
+
+Note that we now have two data objects: `performance_data` contains our original data and `averages` contains just the three averages we've calculated.
+
+### Day-to-day differences
+
+The second step is to visualize the changes from day to day for each worker in their performance. To do that, we'll create new variables (columns) that will track the performance *change* from previous day for each worker. We'll use the function lag() to refer to the previous day's performance.
+
+```{r}
+# update the dataframe by adding a new variable for each worker
+performance_data <- performance_data |>
+  # make sure that the data are arranged by `day` to avoid accidental miscalculations
+  arrange(day) |> 
+  # add new variables
+  mutate(
+    w1_change = worker1 - lag(worker1),
+    w2_change = worker2 - lag(worker2),
+    w3_change = worker3 - lag(worker3),
+  )
+
+# let's see what we have now; we'll include only the relevant columns here
+performance_data |> 
+  select(worker1, w1_change, worker2, w2_change, worker3, w3_change)
+```
+
+### Visualize the data
+
+This looks right. Now let's visualize the performance and the differences for worker 1. We'll use the set of plotting functions available in `ggplot2` package (which is part of the tidyverse).
+
+```{r}
+# plot a histogram of worker 1 performance
+ggplot(data = performance_data) + geom_histogram(aes(x = worker1))
+```
+
+Let's do the same for worker1's performance changes from day to day.
+
+```{r}
+# plot a histogram of w1_change
+ggplot(data = performance_data) + geom_histogram(aes(x = w1_change))
+```
+
+## Conclusion
+
+This starter code aimed to show some basic steps in data analysis. It's intended to help save the time in preparing the exercise.
